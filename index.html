@@ -14,7 +14,7 @@
             transform: scale(0.96);
         }
         .price-tag {
-            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
         }
     </style>
 </head>
@@ -22,8 +22,8 @@
 
     <div class="bg-white shadow-2xl rounded-3xl p-6 w-full max-w-sm border border-gray-50">
         <div id="main-header" class="text-center mb-6">
-            <h1 class="text-2xl font-bold text-blue-600">🥤 สั่งน้ำ / น้ำแข็ง</h1>
-            <p class="text-gray-400 text-xs mt-1 font-medium">ระบุรายการ ระบบจะคำนวณยอดเงินให้อัตโนมัติ</p>
+            <h1 class="text-2xl font-bold text-blue-600 font-sans">🥤 สั่งน้ำ / น้ำแข็ง</h1>
+            <p class="text-gray-400 text-xs mt-1 font-medium italic">คำนวณราคาอัตโนมัติ สะดวก รวดเร็ว</p>
         </div>
 
         <!-- หน้าฟอร์มสั่งซื้อ -->
@@ -63,15 +63,16 @@
                         class="w-full px-4 py-3 bg-blue-50 border border-blue-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-center font-bold text-blue-600 text-xl">
                 </div>
             </div>
+
             <!-- ยอดรวมแสดงผล -->
-            <div class="price-tag p-4 rounded-2xl text-center shadow-md">
-                <p class="text-blue-100 text-xs font-bold uppercase tracking-wider">ยอดรวมที่ต้องชำระ</p>
+            <div class="price-tag p-4 rounded-2xl text-center shadow-lg transform transition-transform duration-300">
+                <p class="text-blue-100 text-xs font-bold uppercase tracking-wider mb-1">ยอดรวมทั้งหมด</p>
                 <h2 id="total-display" class="text-white text-3xl font-black">25 บาท</h2>
             </div>
 
             <!-- รูปถ่าย -->
             <div class="text-left">
-                <label class="block text-gray-700 text-sm font-bold mb-1 ml-1">📸 รูปถ่าย (ถ้ามี)</label>
+                <label class="block text-gray-700 text-sm font-bold mb-1 ml-1">📸 รูปถ่าย (ทางเลือก)</label>
                 <input type="file" id="photo" accept="image/*" 
                     class="w-full text-xs text-gray-400 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-gray-100 file:text-gray-600 cursor-pointer border border-gray-100 rounded-xl p-1 bg-gray-50">
             </div>
@@ -88,7 +89,7 @@
             <div class="space-y-2">
                 <h2 class="text-2xl font-bold text-green-600">ส่งออเดอร์สำเร็จ!</h2>
                 <p class="text-gray-700 text-lg font-medium">กรุณารอประมาณ <span class="text-blue-600 font-bold">5 นาที</span></p>
-                <p class="text-gray-400 text-sm">เจ้ฟ้ากำลังเตรียมจัดส่งให้จ้า</p>
+                <p class="text-gray-400 text-sm">ร้านค้าได้รับข้อมูลและกำลังจัดส่งให้ครับ</p>
             </div>
             <div class="pt-10">
                 <button onclick="resetApp()" 
@@ -98,7 +99,7 @@
             </div>
         </div>
 
-        <div id="error-message" class="hidden mt-4 p-2 bg-red-50 text-red-600 text-xs rounded-xl text-center font-bold"></div>
+        <div id="error-message" class="hidden mt-4 p-2 bg-red-50 text-red-600 text-xs rounded-xl text-center font-bold border border-red-100"></div>
     </div>
 
     <script>
@@ -107,7 +108,6 @@
 
         const PRICE_WATER = 25;
         const PRICE_ICE = 40;
-        const PRICE_EXTRA = 10;
 
         function updateUI() {
             const product = document.getElementById("product").value;
@@ -126,7 +126,6 @@
 
         function calculateTotal() {
             const product = document.getElementById("product").value;
-            const isExtra = document.getElementById("extra-service").checked;
             let total = 0;
 
             if (product === "น้ำเปล่า") {
@@ -141,8 +140,6 @@
                 total = (wAmount * PRICE_WATER) + (iAmount * PRICE_ICE);
             }
 
-            if (isExtra) total += PRICE_EXTRA;
-
             document.getElementById("total-display").innerText = total.toLocaleString() + " บาท";
             return total;
         }
@@ -152,7 +149,6 @@
             const product = document.getElementById("product").value;
             const photoInput = document.getElementById("photo");
             const btn = document.getElementById("btn-send");
-            const isExtra = document.getElementById("extra-service").checked;
             const total = calculateTotal();
 
             if (!name) {
@@ -161,7 +157,7 @@
             }
 
             btn.disabled = true;
-            btn.innerText = "กำลังส่ง...";
+            btn.innerText = "กำลังส่งข้อมูล...";
             btn.style.opacity = "0.6";
 
             let details = "";
@@ -177,7 +173,7 @@
                 details = `🧊 น้ำแข็ง: ${a} ลูก (${a * PRICE_ICE}.-)`;
             }
 
-            const caption = `💰 *มีออเดอร์ใหม่ (เก็บเงิน!)*\n━━━━━━━━━━━━━━\n🏠 *ร้าน:* ${name}\n📦 *รายการ:*\n${details}\n${isExtra ? "🤫 *บริการพิเศษ (กระซิบ):* 10.-" : ""}\n\n💵 *ยอดรวมทั้งสิ้น:* ${total} บาท\n⏰ *เวลา:* ${new Date().toLocaleString('th-TH')}\n━━━━━━━━━━━━━━`;
+            const caption = `💰 *มีออเดอร์ใหม่*\n━━━━━━━━━━━━━━\n🏠 *ร้าน:* ${name}\n📦 *รายการ:*\n${details}\n\n💵 *ยอดรวมสุทธิ:* ${total} บาท\n⏰ *เวลา:* ${new Date().toLocaleString('th-TH')}\n━━━━━━━━━━━━━━`;
 
             try {
                 let response;
@@ -199,11 +195,11 @@
                 if (response.ok) {
                     showSuccess();
                 } else {
-                    alert("ส่งข้อมูลไม่สำเร็จ");
+                    alert("ส่งข้อมูลไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");
                     resetButton();
                 }
             } catch (e) {
-                alert("กรุณาตรวจสอบอินเทอร์เน็ต");
+                alert("กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต");
                 resetButton();
             }
         }
@@ -212,6 +208,7 @@
             document.getElementById("main-header").classList.add("hidden");
             document.getElementById("order-form").classList.add("hidden");
             document.getElementById("success-box").classList.remove("hidden");
+            window.scrollTo(0, 0);
         }
 
         function resetApp() {
@@ -219,7 +216,6 @@
             document.getElementById("amount").value = "1";
             document.getElementById("water-amount").value = "1";
             document.getElementById("ice-amount").value = "1";
-            document.getElementById("extra-service").checked = false;
             document.getElementById("photo").value = "";
             document.getElementById("success-box").classList.add("hidden");
             document.getElementById("main-header").classList.remove("hidden");
