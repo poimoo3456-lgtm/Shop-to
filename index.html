@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>สั่งน้ำด่วน - ระบบคำนวณราคา</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #f8fafc;
+            font-family: sans-serif;
+        }
+        .btn-push:active {
+            transform: scale(0.96);
+        }
+        .price-tag {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4 text-gray-800">
+
+    <div class="bg-white shadow-2xl rounded-3xl p-6 w-full max-w-sm border border-gray-50">
+        <div id="main-header" class="text-center mb-6">
+            <h1 class="text-2xl font-bold text-blue-600">🥤 สั่งน้ำ / น้ำแข็ง</h1>
+            <p class="text-gray-400 text-xs mt-1 font-medium">ระบุรายการ ระบบจะคำนวณยอดเงินให้อัตโนมัติ</p>
+        </div>
+
+        <!-- หน้าฟอร์มสั่งซื้อ -->
+        <div id="order-form" class="space-y-4">
+            <div class="text-left">
+                <label class="block text-gray-700 text-sm font-bold mb-1.5 ml-1">ชื่อ / ชื่อร้าน</label>
+                <input type="text" id="name" placeholder="พิมพ์ชื่อร้านของคุณ" 
+                    class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium">
+            </div>
+
+            <div class="text-left">
+                <label class="block text-gray-700 text-sm font-bold mb-1.5 ml-1">เลือกรายการ</label>
+                <select id="product" onchange="updateUI()" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium">
+                    <option value="น้ำเปล่า">💧 น้ำเปล่า (แพ็กละ 25.-)</option>
+                    <option value="น้ำแข็ง">🧊 น้ำแข็ง (ลูกละ 40.-)</option>
+                    <option value="น้ำ + น้ำแข็ง">🥤 ทั้งน้ำและน้ำแข็ง</option>
+                </select>
+            </div>
+
+            <!-- จำนวนปกติ -->
+            <div id="single-amount-box" class="text-left">
+                <label class="block text-gray-700 text-sm font-bold mb-1.5 ml-1">จำนวน</label>
+                <input type="number" id="amount" value="1" min="1" oninput="calculateTotal()"
+                    class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-center font-bold text-blue-600 text-xl">
+            </div>
+
+            <!-- จำนวนแยก (เมื่อสั่ง 2 อย่าง) -->
+            <div id="double-amount-box" class="hidden grid grid-cols-2 gap-3 text-left">
+                <div>
+                    <label class="block text-gray-700 text-xs font-bold mb-1.5 ml-1">💧 จำนวนน้ำ</label>
+                    <input type="number" id="water-amount" value="1" min="1" oninput="calculateTotal()"
+                        class="w-full px-4 py-3 bg-blue-50 border border-blue-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-center font-bold text-blue-600 text-xl">
+                </div>
+                <div>
+                    <label class="block text-gray-700 text-xs font-bold mb-1.5 ml-1">🧊 จำนวนน้ำแข็ง</label>
+                    <input type="number" id="ice-amount" value="1" min="1" oninput="calculateTotal()"
+                        class="w-full px-4 py-3 bg-blue-50 border border-blue-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-center font-bold text-blue-600 text-xl">
+                </div>
+            </div>
+
+            <!-- บริการพิเศษ -->
+            <div class="flex items-center p-3 bg-orange-50 rounded-2xl border border-orange-100">
+                <input type="checkbox" id="extra-service" onchange="calculateTotal()" class="w-5 h-5 text-blue-600 rounded focus:ring-blue-500">
+                <label for="extra-service" class="ml-3 text-sm font-bold text-orange-700">
+                    🤫 บริการพิเศษ (กระซิบ) +10 บาท
+                </label>
+            </div>
+
+            <!-- ยอดรวมแสดงผล -->
+            <div class="price-tag p-4 rounded-2xl text-center shadow-md">
+                <p class="text-blue-100 text-xs font-bold uppercase tracking-wider">ยอดรวมที่ต้องชำระ</p>
+                <h2 id="total-display" class="text-white text-3xl font-black">25 บาท</h2>
+            </div>
+
+            <!-- รูปถ่าย -->
+            <div class="text-left">
+                <label class="block text-gray-700 text-sm font-bold mb-1 ml-1">📸 รูปถ่าย (ถ้ามี)</label>
+                <input type="file" id="photo" accept="image/*" 
+                    class="w-full text-xs text-gray-400 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-gray-100 file:text-gray-600 cursor-pointer border border-gray-100 rounded-xl p-1 bg-gray-50">
+            </div>
+
+            <button onclick="sendOrder()" id="btn-send"
+                class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-2xl shadow-lg btn-push transition-all text-xl mt-2">
+                ส่งออเดอร์ทันที
+            </button>
+        </div>
+
+        <!-- หน้าจอสำเร็จ -->
+        <div id="success-box" class="hidden text-center py-10 space-y-4">
+            <div class="text-7xl animate-bounce">🚚</div>
+            <div class="space-y-2">
+                <h2 class="text-2xl font-bold text-green-600">ส่งออเดอร์สำเร็จ!</h2>
+                <p class="text-gray-700 text-lg font-medium">กรุณารอประมาณ <span class="text-blue-600 font-bold">5 นาที</span></p>
+                <p class="text-gray-400 text-sm">เจ้ฟ้ากำลังเตรียมจัดส่งให้จ้า</p>
+            </div>
+            <div class="pt-10">
+                <button onclick="resetApp()" 
+                    class="w-full py-4 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-2xl font-bold transition-colors btn-push shadow-sm">
+                    กลับไปหน้าสั่งซื้อ
+                </button>
+            </div>
+        </div>
+
+        <div id="error-message" class="hidden mt-4 p-2 bg-red-50 text-red-600 text-xs rounded-xl text-center font-bold"></div>
+    </div>
+
+    <script>
+        const BOT_TOKEN = "8353783168:AAHml9nsC_uKMIhw59Knqh8I_HQnEfHSwJU";
+        const CHAT_ID = "7967010433"; 
+
+        const PRICE_WATER = 25;
+        const PRICE_ICE = 40;
+        const PRICE_EXTRA = 10;
+
+        function updateUI() {
+            const product = document.getElementById("product").value;
+            const singleBox = document.getElementById("single-amount-box");
+            const doubleBox = document.getElementById("double-amount-box");
+
+            if (product === "น้ำ + น้ำแข็ง") {
+                singleBox.classList.add("hidden");
+                doubleBox.classList.remove("hidden");
+            } else {
+                singleBox.classList.remove("hidden");
+                doubleBox.classList.add("hidden");
+            }
+            calculateTotal();
+        }
+
+        function calculateTotal() {
+            const product = document.getElementById("product").value;
+            const isExtra = document.getElementById("extra-service").checked;
+            let total = 0;
+
+            if (product === "น้ำเปล่า") {
+                const amount = document.getElementById("amount").value || 0;
+                total = amount * PRICE_WATER;
+            } else if (product === "น้ำแข็ง") {
+                const amount = document.getElementById("amount").value || 0;
+                total = amount * PRICE_ICE;
+            } else if (product === "น้ำ + น้ำแข็ง") {
+                const wAmount = document.getElementById("water-amount").value || 0;
+                const iAmount = document.getElementById("ice-amount").value || 0;
+                total = (wAmount * PRICE_WATER) + (iAmount * PRICE_ICE);
+            }
+
+            if (isExtra) total += PRICE_EXTRA;
+
+            document.getElementById("total-display").innerText = total.toLocaleString() + " บาท";
+            return total;
+        }
+
+        async function sendOrder() {
+            const name = document.getElementById("name").value.trim();
+            const product = document.getElementById("product").value;
+            const photoInput = document.getElementById("photo");
+            const btn = document.getElementById("btn-send");
+            const isExtra = document.getElementById("extra-service").checked;
+            const total = calculateTotal();
+
+            if (!name) {
+                alert("กรุณากรอกชื่อร้าน");
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerText = "กำลังส่ง...";
+            btn.style.opacity = "0.6";
+
+            let details = "";
+            if (product === "น้ำ + น้ำแข็ง") {
+                const w = document.getElementById("water-amount").value;
+                const i = document.getElementById("ice-amount").value;
+                details = `💧 น้ำ: ${w} แพ็ก (${w * PRICE_WATER}.-)\n🧊 น้ำแข็ง: ${i} ลูก (${i * PRICE_ICE}.-)`;
+            } else if (product === "น้ำเปล่า") {
+                const a = document.getElementById("amount").value;
+                details = `💧 น้ำเปล่า: ${a} แพ็ก (${a * PRICE_WATER}.-)`;
+            } else {
+                const a = document.getElementById("amount").value;
+                details = `🧊 น้ำแข็ง: ${a} ลูก (${a * PRICE_ICE}.-)`;
+            }
+
+            const caption = `💰 *มีออเดอร์ใหม่ (เก็บเงิน!)*\n━━━━━━━━━━━━━━\n🏠 *ร้าน:* ${name}\n📦 *รายการ:*\n${details}\n${isExtra ? "🤫 *บริการพิเศษ (กระซิบ):* 10.-" : ""}\n\n💵 *ยอดรวมทั้งสิ้น:* ${total} บาท\n⏰ *เวลา:* ${new Date().toLocaleString('th-TH')}\n━━━━━━━━━━━━━━`;
+
+            try {
+                let response;
+                if (photoInput.files && photoInput.files[0]) {
+                    const formData = new FormData();
+                    formData.append("chat_id", CHAT_ID);
+                    formData.append("photo", photoInput.files[0]);
+                    formData.append("caption", caption);
+                    formData.append("parse_mode", "Markdown");
+                    response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, { method: "POST", body: formData });
+                } else {
+                    response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                        method: "POST",
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ chat_id: CHAT_ID, text: caption, parse_mode: "Markdown" })
+                    });
+                }
+
+                if (response.ok) {
+                    showSuccess();
+                } else {
+                    alert("ส่งข้อมูลไม่สำเร็จ");
+                    resetButton();
+                }
+            } catch (e) {
+                alert("กรุณาตรวจสอบอินเทอร์เน็ต");
+                resetButton();
+            }
+        }
+
+        function showSuccess() {
+            document.getElementById("main-header").classList.add("hidden");
+            document.getElementById("order-form").classList.add("hidden");
+            document.getElementById("success-box").classList.remove("hidden");
+        }
+
+        function resetApp() {
+            document.getElementById("name").value = "";
+            document.getElementById("amount").value = "1";
+            document.getElementById("water-amount").value = "1";
+            document.getElementById("ice-amount").value = "1";
+            document.getElementById("extra-service").checked = false;
+            document.getElementById("photo").value = "";
+            document.getElementById("success-box").classList.add("hidden");
+            document.getElementById("main-header").classList.remove("hidden");
+            document.getElementById("order-form").classList.remove("hidden");
+            calculateTotal();
+            resetButton();
+        }
+
+        function resetButton() {
+            const btn = document.getElementById("btn-send");
+            btn.disabled = false;
+            btn.innerText = "ส่งออเดอร์ทันที";
+            btn.style.opacity = "1";
+        }
+    </script>
+</body>
+</html>
